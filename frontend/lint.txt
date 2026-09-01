@@ -1,0 +1,93 @@
+
+> frontend@0.0.0 lint
+> oxlint
+
+
+  ! eslint(no-unused-vars): Catch parameter 'e' is caught but never used.
+    ,-[src/Forms.tsx:61:18]
+ 60 |             await fetchForms();
+ 61 |         } catch (e) {
+    :                  |
+    :                  `-- 'e' is declared here
+ 62 |             alert("Delete failed.");
+    `----
+  help: Consider handling this error.
+
+  ! react(set-state-in-effect): Calling setState synchronously within an effect can trigger cascading renders
+    ,-[src/Forms.tsx:28:9]
+ 26 | 
+ 27 |     useEffect(() => {
+    :     ^^^^|^^^^
+    :         `-- This is the containing effect
+ 28 |         fetchForms();
+    :         ^^^^^|^^^^
+    :              `-- Avoid calling setState() directly within an effect
+ 29 |     }, [fetchForms]);
+    `----
+  help: Effects should synchronize React with external systems. Calling setState synchronously inside an effect starts another render and is usually unnecessary. Derive the value during render, initialize state directly, or update it from the event that caused the change. Use an effect only when synchronizing with an external system.
+  note: React Compiler skipped optimizing this component or hook. Additional guidance: https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect
+
+  ! react(set-state-in-effect): Calling setState synchronously within an effect can trigger cascading renders
+    ,-[src/Vault.tsx:29:9]
+ 27 | 
+ 28 |     useEffect(() => {
+    :     ^^^^|^^^^
+    :         `-- This is the containing effect
+ 29 |         fetchDocuments();
+    :         ^^^^^^^|^^^^^^
+    :                `-- Avoid calling setState() directly within an effect
+ 30 |         const interval = setInterval(fetchDocuments, 3000);
+    `----
+  help: Effects should synchronize React with external systems. Calling setState synchronously inside an effect starts another render and is usually unnecessary. Derive the value during render, initialize state directly, or update it from the event that caused the change. Use an effect only when synchronizing with an external system.
+  note: React Compiler skipped optimizing this component or hook. Additional guidance: https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect
+
+  ! eslint(no-unused-vars): Catch parameter 'e' is caught but never used.
+    ,-[src/FormDetail.tsx:80:18]
+ 79 |             setFormSummary(data.summary);
+ 80 |         } catch (e) {
+    :                  |
+    :                  `-- 'e' is declared here
+ 81 |             setFormSummary('Unable to generate form summary at this time.');
+    `----
+  help: Consider handling this error.
+
+  ! react(set-state-in-effect): Calling setState synchronously within an effect can trigger cascading renders
+    ,-[src/FormDetail.tsx:48:17]
+ 46 | 
+ 47 |     useEffect(() => {
+    :     ^^^^|^^^^
+    :         `-- This is the containing effect
+ 48 |         if (id) fetchReqs();
+    :                 ^^^^|^^^^
+    :                     `-- Avoid calling setState() directly within an effect
+ 49 |     }, [fetchReqs, id]);
+    `----
+  help: Effects should synchronize React with external systems. Calling setState synchronously inside an effect starts another render and is usually unnecessary. Derive the value during render, initialize state directly, or update it from the event that caused the change. Use an effect only when synchronizing with an external system.
+  note: React Compiler skipped optimizing this component or hook. Additional guidance: https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect
+
+  ! eslint(no-unused-vars): Catch parameter 'e' is caught but never used.
+    ,-[src/Checklist.tsx:69:18]
+ 68 |             setLlmExplanations(prev => ({ ...prev, [item.itemId]: data.explanation }));
+ 69 |         } catch (e) {
+    :                  |
+    :                  `-- 'e' is declared here
+ 70 |             setLlmExplanations(prev => ({ ...prev, [item.itemId]: "Could not generate AI explanation." }));
+    `----
+  help: Consider handling this error.
+
+  ! react(set-state-in-effect): Calling setState synchronously within an effect can trigger cascading renders
+    ,-[src/Checklist.tsx:55:9]
+ 53 | 
+ 54 |     useEffect(() => {
+    :     ^^^^|^^^^
+    :         `-- This is the containing effect
+ 55 |         fetchData();
+    :         ^^^^|^^^^
+    :             `-- Avoid calling setState() directly within an effect
+ 56 |     }, [fetchData]);
+    `----
+  help: Effects should synchronize React with external systems. Calling setState synchronously inside an effect starts another render and is usually unnecessary. Derive the value during render, initialize state directly, or update it from the event that caused the change. Use an effect only when synchronizing with an external system.
+  note: React Compiler skipped optimizing this component or hook. Additional guidance: https://react.dev/reference/eslint-plugin-react-hooks/lints/set-state-in-effect
+
+Found 7 warnings and 0 errors.
+Finished in 56ms on 9 files with 116 rules using 12 threads.

@@ -1,0 +1,50 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< com.copilot:form-copilot >----------------------
+[INFO] Building  0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec:3.1.1:exec (npm-install) @ form-copilot ---
+
+up to date, audited 134 packages in 5s
+
+34 packages are looking for funding
+  run `npm fund` for details
+
+found 0 vulnerabilities
+[INFO] 
+[INFO] --- exec:3.1.1:exec (npm-run-build) @ form-copilot ---
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+vite v8.2.2 building client environment for production...
+transforming...
+Γ£ô 83 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.81 kB Γöé gzip:   0.45 kB
+dist/assets/index-CvTNfV-J.css   32.03 kB Γöé gzip:   6.21 kB
+dist/assets/index-CJXS33W6.js   332.26 kB Γöé gzip: 102.18 kB
+
+Γ£ô built in 1.55s
+[INFO] 
+[INFO] --- resources:3.3.1:copy-resources (copy-frontend-build) @ form-copilot ---
+[INFO] Copying 5 resources from ..\frontend\dist to target\classes\static
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ form-copilot ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.15.0:compile (default-compile) @ form-copilot ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 24 source files with javac [debug parameters release 21] to target\classes
+[INFO] /C:/Users/Mohak Tandon/.gemini/antigravity/scratch/form-copilot/backend/src/main/java/com/copilot/form_copilot/config/GlobalExceptionHandler.java: C:\Users\Mohak Tandon\.gemini\antigravity\scratch\form-copilot\backend\src\main\java\com\copilot\form_copilot\config\GlobalExceptionHandler.java uses or overrides a deprecated API.
+[INFO] /C:/Users/Mohak Tandon/.gemini/antigravity/scratch/form-copilot/backend/src/main/java/com/copilot/form_copilot/config/GlobalExceptionHandler.java: Recompile with -Xlint:deprecation for details.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  18.542 s
+[INFO] Finished at: 2026-09-01T18:12:19+05:30
+[INFO] ------------------------------------------------------------------------
