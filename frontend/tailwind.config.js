@@ -7,51 +7,66 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: {
-          950: '#0a0e1a',
-          900: '#0f1525',
-          800: '#151d32',
-          700: '#1c2640',
-          600: '#243050',
-          500: '#2f3f66',
+        // New warm-white palette from Stitch
+        surface: {
+          DEFAULT: '#faf9f7',    // main bg
+          50: '#ffffff',
+          100: '#f5f4f1',
+          200: '#edecea',
+          300: '#e4e3e0',
+          400: '#d4d3d0',
         },
-        bronze: {
-          DEFAULT: '#c9a96e',
-          light: '#dfc8a0',
-          dark: '#a88a4e',
-          muted: '#8a7551',
+        ink: {
+          DEFAULT: '#1a1a1a',    // primary text
+          secondary: '#4a4a4a',  // secondary text
+          muted: '#7a7a7a',      // muted/meta text
+          faint: '#a0a0a0',      // dimmed labels
         },
-        ivory: {
-          DEFAULT: '#f0ece4',
-          dim: '#b8b3a8',
-          muted: '#8a8680',
+        accent: {
+          DEFAULT: '#2d6a4f',    // muted green primary
+          light: '#40916c',
+          dark: '#1b4332',
+          muted: '#52796f',
+          bg: '#e8f5e9',
+          border: '#c8e6c9',
         },
         status: {
-          green: '#4ade80',
-          'green-bg': '#0d2818',
-          'green-border': '#16432b',
-          red: '#f87171',
-          'red-bg': '#2a1215',
-          'red-border': '#451a1e',
-          amber: '#fbbf24',
-          'amber-bg': '#2a2008',
-          'amber-border': '#42350f',
-          blue: '#60a5fa',
-          'blue-bg': '#0c1929',
-          'blue-border': '#172d47',
+          green: '#2d6a4f',
+          'green-light': '#40916c',
+          'green-bg': '#e8f5e9',
+          'green-border': '#a5d6a7',
+          red: '#c62828',
+          'red-bg': '#ffebee',
+          'red-border': '#ef9a9a',
+          amber: '#e65100',
+          'amber-light': '#f57c00',
+          'amber-bg': '#fff3e0',
+          'amber-border': '#ffcc80',
+          blue: '#1565c0',
+          'blue-bg': '#e3f2fd',
+          'blue-border': '#90caf9',
+        },
+        border: {
+          DEFAULT: '#e0dfdc',
+          light: '#eeedeb',
+          dark: '#c8c7c4',
         },
       },
       fontFamily: {
-        serif: ['"DM Serif Display"', 'Georgia', 'serif'],
+        display: ['"DM Serif Display"', 'Georgia', 'serif'],
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       borderRadius: {
-        'premium': '0.625rem',
+        'premium': '0.5rem',
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgba(0,0,0,0.3), 0 1px 2px -1px rgba(0,0,0,0.3)',
-        'card-hover': '0 4px 12px 0 rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3)',
-        'glow-bronze': '0 0 20px rgba(201,169,110,0.15)',
+        'card': '0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.04)',
+        'card-hover': '0 4px 12px 0 rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.04)',
+        'elevated': '0 8px 24px 0 rgba(0,0,0,0.08)',
+        'subtle': '0 1px 2px 0 rgba(0,0,0,0.04)',
+      },
+      maxWidth: {
+        'page': '1280px',
       },
     },
   },

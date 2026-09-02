@@ -1,5 +1,10 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import {
+    Search, Lock, FileText, Eye, Trash2, ShieldCheck, HardDrive,
+    CloudOff, Loader2, CheckCircle, Key, ScanText, FolderOpen,
+    CreditCard, GraduationCap, Landmark, MapPin, MoreVertical, Plus
+} from 'lucide-react';
 
 type VaultDocument = {
     documentId: string;
@@ -9,19 +14,66 @@ type VaultDocument = {
     extractedFields: string;
 };
 
+const CATEGORY_MAP: Record<string, string> = {
+    'aadhaar': 'Identity',
+    'pan': 'Identity',
+    'passport': 'Identity',
+    'voter': 'Identity',
+    'driving': 'Identity',
+    'birth': 'Identity',
+    'address': 'Address',
+    'utility': 'Address',
+    'electricity': 'Address',
+    'water': 'Address',
+    'rent': 'Address',
+    'marksheet': 'Education',
+    'degree': 'Education',
+    'diploma': 'Education',
+    'certificate': 'Education',
+    'school': 'Education',
+    'income': 'Financial',
+    'salary': 'Financial',
+    'tax': 'Financial',
+    'bank': 'Financial',
+    'itr': 'Financial',
+};
+
+function getCategory(docType: string): string {
+    const lower = docType.toLowerCase();
+    for (const [key, cat] of Object.entries(CATEGORY_MAP)) {
+        if (lower.includes(key)) return cat;
+    }
+    return 'Other';
+}
+
+function getCategoryIcon(category: string) {
+    switch (category) {
+        case 'Identity': return CreditCard;
+        case 'Address': return MapPin;
+        case 'Education': return GraduationCap;
+        case 'Financial': return Landmark;
+        default: return FileText;
+    }
+}
+
+const TABS = ['All', 'Identity', 'Address', 'Education', 'Financial', 'Other'] as const;
+
 export default function Vault() {
     const [documents, setDocuments] = useState<VaultDocument[]>([]);
     const [uploading, setUploading] = useState(false);
+    const [uploadStage, setUploadStage] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<string>('All');
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     const fetchDocuments = useCallback(async () => {
         try {
             const endpoint = searchTerm ? `/api/v1/vault?search=${encodeURIComponent(searchTerm)}` : '/api/v1/vault';
             const { data } = await axios.get(endpoint);
             setDocuments(data);
-        } catch (e) {
-            console.error(e);
+        } catch (_e) {
+            console.error(_e);
         }
     }, [searchTerm]);
 
@@ -34,21 +86,30 @@ export default function Vault() {
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.length) return;
         setUploading(true);
+        setUploadStage(1);
 
         const formData = new FormData();
         formData.append('file', e.target.files[0]);
+
+        const stageTimer1 = setTimeout(() => setUploadStage(2), 600);
+        const stageTimer2 = setTimeout(() => setUploadStage(3), 1200);
+        const stageTimer3 = setTimeout(() => setUploadStage(4), 1800);
 
         try {
             await axios.post('/api/v1/vault/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             await fetchDocuments();
-        } catch (err) {
-            console.error(err);
+        } catch (_err) {
+            console.error(_err);
             alert("Failed to upload document.");
         } finally {
+            clearTimeout(stageTimer1);
+            clearTimeout(stageTimer2);
+            clearTimeout(stageTimer3);
             setUploading(false);
-            e.target.value = ''; // reset
+            setUploadStage(0);
+            e.target.value = '';
         }
     };
 
@@ -58,124 +119,303 @@ export default function Vault() {
         try {
             await axios.delete(`/api/v1/vault/${id}`);
             await fetchDocuments();
-        } catch (e) {
-            console.error(e);
+        } catch (_e) {
+            console.error(_e);
             alert("Failed to delete.");
         } finally {
             setDeletingId(null);
         }
-    }
+    };
+
+    const categorizedDocs = useMemo(() => {
+        return documents.map(doc => ({
+            ...doc,
+            category: getCategory(doc.documentType),
+        }));
+    }, [documents]);
+
+    const filteredDocs = useMemo(() => {
+        if (activeTab === 'All') return categorizedDocs;
+        return categorizedDocs.filter(d => d.category === activeTab);
+    }, [categorizedDocs, activeTab]);
+
+    const tabCounts = useMemo(() => {
+        const counts: Record<string, number> = { All: documents.length };
+        for (const tab of TABS) {
+            if (tab !== 'All') counts[tab] = 0;
+        }
+        for (const doc of categorizedDocs) {
+            counts[doc.category] = (counts[doc.category] || 0) + 1;
+        }
+        return counts;
+    }, [documents.length, categorizedDocs]);
+
+    const uploadStages = [
+        { label: 'Document uploaded', done: uploadStage >= 1 },
+        { label: 'Document encrypted', done: uploadStage >= 2 },
+        { label: 'Text extracted', done: uploadStage >= 3 },
+        { label: 'Identifying document', done: uploadStage >= 4, active: uploadStage === 4 },
+        { label: 'Extracting fields', done: false, active: false },
+        { label: 'Preparing for matching', done: false, active: false },
+    ];
 
     return (
-        <div className="space-y-8 animate-in duration-500">
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="space-y-6 animate-in duration-500">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="font-display text-3xl sm:text-4xl text-ivory tracking-tight">Document Vault</h1>
-                    <p className="mt-2 text-ivory-dim text-sm">Securely store encrypted documents for automatic form matching.</p>
-                </div>
-
-                <div className="w-full sm:w-auto relative">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ivory-muted" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
-                    <input
-                        type="text"
-                        placeholder="Search vault..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full sm:w-64 pl-10 pr-4 py-2.5 border border-navy-600 rounded-lg bg-navy-800 text-ivory placeholder-ivory-muted focus:ring-1 focus:ring-bronze/50 focus:border-bronze/50 shadow-card transition-all text-sm"
-                    />
-                </div>
-            </div>
-
-            <div className="bg-navy-800 p-6 sm:p-8 rounded-xl border border-navy-700 flex flex-col items-center justify-center text-center shadow-card">
-                <div className="w-14 h-14 bg-navy-700 text-bronze rounded-xl flex items-center justify-center mb-5">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-ivory mb-1">Add to Encrypted Vault</h3>
-                <p className="text-sm text-ivory-muted mb-6 max-w-md leading-relaxed">Documents are encrypted with AES-256 immediately upon upload. Extracts text locally without leaving your machine.</p>
-
-                <label className="relative cursor-pointer">
-                    <span className={`inline-flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all
-                        ${uploading ? 'bg-bronze/60 text-navy-950 cursor-wait' : 'bg-gradient-to-r from-bronze to-bronze-dark text-navy-950 hover:from-bronze-light hover:to-bronze hover:shadow-glow-bronze'}`}>
-                        {uploading ? (
-                            <>
-                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-navy-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Securing & Analyzing...
-                            </>
-                        ) : 'Select Document (PDF/Image)'}
-                    </span>
-                    <input type="file" name="file_upload" className="hidden" onChange={handleUpload} disabled={uploading} />
-                </label>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-                {documents.map((doc) => (
-                    <div key={doc.documentId} className="group bg-navy-800 rounded-xl border border-navy-700 overflow-hidden hover:border-navy-600 hover:shadow-card-hover transition-all flex flex-col">
-                        <div className="p-5 border-b border-navy-700/50 flex-1">
-                            <div className="flex justify-between items-start mb-4">
-                                <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 bg-navy-700 text-bronze rounded-lg flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-semibold text-ivory leading-tight">{doc.documentType}</h4>
-                                        <span className="text-xs text-ivory-muted font-mono" title={doc.documentId}>
-                                            {doc.documentId.substring(0, 8)}...
-                                        </span>
-                                    </div>
-                                </div>
-                                {doc.ocrConfidence > 0 && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-status-green-bg text-status-green border border-status-green-border">
-                                        OCR: {Math.round(doc.ocrConfidence * 100)}%
-                                    </span>
-                                )}
-                            </div>
-
-                            <div>
-                                <h4 className="text-[10px] uppercase font-bold text-ivory-muted tracking-widest mb-2">Parsed Data</h4>
-                                <div className="text-xs bg-navy-900 text-ivory-dim p-3 rounded-lg h-24 overflow-y-auto font-mono whitespace-pre-wrap border border-navy-700/50">
-                                    {doc.extractedFields || <span className="text-ivory-muted animate-pulse">Processing...</span>}
-                                </div>
-                            </div>
+                    <div className="flex items-center space-x-3">
+                        <h1 className="font-display text-2xl sm:text-3xl text-ink tracking-tight">Secure Document Vault</h1>
+                        <span className="text-xs font-semibold text-ink-muted bg-surface-200 border border-border px-2.5 py-0.5 rounded-full">{documents.length} docs</span>
+                    </div>
+                    <div className="flex items-center space-x-3 mt-1.5">
+                        <div className="flex items-center space-x-1 text-xs text-ink-muted">
+                            <Lock className="w-3 h-3 text-accent" />
+                            <span>AES-256 encrypted</span>
                         </div>
-
-                        <div className="bg-navy-900/50 px-5 py-3 flex items-center justify-between">
-                            <a href={`/api/v1/vault/${doc.documentId}/preview`} target="_blank" rel="noreferrer" className="text-bronze hover:text-bronze-light text-sm font-medium flex items-center transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                                </svg>
-                                Decrypt & View
-                            </a>
-                            <button
-                                onClick={() => handleDelete(doc.documentId)}
-                                disabled={deletingId === doc.documentId}
-                                className="text-ivory-muted hover:text-status-red transition-colors opacity-0 group-hover:opacity-100 p-1"
-                                title="Delete Document"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                            </button>
+                        <div className="flex items-center space-x-1 text-xs text-ink-muted">
+                            <HardDrive className="w-3 h-3 text-ink-faint" />
+                            <span>Local processing</span>
                         </div>
                     </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
+                        <input
+                            type="text"
+                            placeholder="Search vault..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full sm:w-56 pl-9 pr-3 py-2 border border-border rounded-lg bg-surface-50 text-ink placeholder-ink-faint focus:ring-1 focus:ring-accent/30 focus:border-accent/40 transition-all text-sm"
+                        />
+                    </div>
+                    <label className="relative cursor-pointer flex-shrink-0">
+                        <span className={`inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg font-semibold text-sm transition-all
+                            ${uploading ? 'bg-accent/60 text-white cursor-wait' : 'bg-ink text-surface-50 hover:bg-ink-secondary hover:shadow-card'}`}>
+                            {uploading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    <span>Processing...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Plus className="w-4 h-4" />
+                                    <span>Add Document</span>
+                                </>
+                            )}
+                        </span>
+                        <input type="file" name="file_upload" className="hidden" onChange={handleUpload} disabled={uploading} />
+                    </label>
+                </div>
+            </div>
+
+            {/* Processing Panel */}
+            {uploading && (
+                <div className="bg-surface-50 rounded-xl border border-border p-5 shadow-card">
+                    <h3 className="text-sm font-semibold text-ink mb-3 flex items-center space-x-2">
+                        <Loader2 className="w-4 h-4 text-accent animate-spin" />
+                        <span>Processing Document</span>
+                    </h3>
+                    <div className="space-y-2">
+                        {uploadStages.map((stage, i) => (
+                            <div key={i} className="flex items-center space-x-2.5">
+                                {stage.done ? (
+                                    <CheckCircle className="w-4 h-4 text-accent flex-shrink-0" />
+                                ) : stage.active ? (
+                                    <Loader2 className="w-4 h-4 text-accent animate-spin flex-shrink-0" />
+                                ) : (
+                                    <div className="w-4 h-4 rounded-full border border-border-dark flex-shrink-0" />
+                                )}
+                                <span className={`text-sm ${stage.done ? 'text-ink' : stage.active ? 'text-accent' : 'text-ink-faint'}`}>
+                                    {stage.label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Category Tabs */}
+            <div className="flex items-center space-x-1 overflow-x-auto pb-1 -mx-1 px-1 border-b border-border">
+                {TABS.map(tab => (
+                    <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`px-3 py-2 text-sm font-medium transition-all whitespace-nowrap flex items-center space-x-1.5 border-b-2 -mb-px ${activeTab === tab
+                            ? 'border-ink text-ink'
+                            : 'border-transparent text-ink-muted hover:text-ink hover:border-border-dark'
+                            }`}
+                    >
+                        <span>{tab}</span>
+                        <span className={`text-xs ${activeTab === tab ? 'text-ink-secondary' : 'text-ink-faint'}`}>
+                            {tabCounts[tab] || 0}
+                        </span>
+                    </button>
                 ))}
             </div>
 
-            {documents.length === 0 && !uploading && (
-                <div className="text-center py-20 px-4 border border-dashed border-navy-600 rounded-xl bg-navy-900/30">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-navy-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                    <h3 className="text-lg font-semibold text-ivory mb-1">Your vault is empty</h3>
-                    <p className="text-ivory-muted text-sm">Upload your government IDs, certificates, and proofs to start automating forms.</p>
+            {/* Document Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredDocs.map((doc) => {
+                    const CategoryIcon = getCategoryIcon(doc.category);
+                    const isProcessing = !doc.extractedFields;
+
+                    return (
+                        <div key={doc.documentId} className="group bg-surface-50 rounded-xl border border-border overflow-hidden hover:border-border-dark hover:shadow-card transition-all flex flex-col">
+                            <div className="p-4 flex-1">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="w-9 h-9 bg-surface-200 text-ink-secondary rounded-lg flex items-center justify-center">
+                                            <CategoryIcon className="w-4 h-4" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h4 className="font-semibold text-ink text-sm leading-tight truncate">{doc.documentType}</h4>
+                                            <div className="flex items-center space-x-2 mt-0.5">
+                                                <span className="text-[10px] uppercase font-bold tracking-wider text-ink-muted bg-surface-200 px-1.5 py-0.5 rounded">
+                                                    {doc.category}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-1">
+                                        {doc.ocrConfidence > 0 && (
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-status-green-bg text-status-green border border-status-green-border">
+                                                <ScanText className="w-3 h-3 mr-0.5" />
+                                                {Math.round(doc.ocrConfidence * 100)}%
+                                            </span>
+                                        )}
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setOpenMenuId(openMenuId === doc.documentId ? null : doc.documentId)}
+                                                className="p-1 text-ink-faint hover:text-ink rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                aria-label="Document actions"
+                                            >
+                                                <MoreVertical className="w-4 h-4" />
+                                            </button>
+                                            {openMenuId === doc.documentId && (
+                                                <div className="absolute right-0 top-full mt-1 bg-surface-50 border border-border rounded-lg shadow-elevated z-20 py-1 w-36">
+                                                    <a
+                                                        href={`/api/v1/vault/${doc.documentId}/preview`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="flex items-center space-x-2 px-3 py-1.5 text-sm text-ink-secondary hover:text-ink hover:bg-surface-100 transition-colors"
+                                                        onClick={() => setOpenMenuId(null)}
+                                                    >
+                                                        <Eye className="w-3.5 h-3.5" />
+                                                        <span>View</span>
+                                                    </a>
+                                                    <button
+                                                        onClick={() => { handleDelete(doc.documentId); setOpenMenuId(null); }}
+                                                        disabled={deletingId === doc.documentId}
+                                                        className="flex items-center space-x-2 px-3 py-1.5 text-sm text-status-red hover:bg-status-red-bg transition-colors w-full text-left"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                        <span>Delete</span>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Status indicators */}
+                                <div className="flex items-center space-x-3 mb-3">
+                                    <div className="flex items-center space-x-1 text-[10px] text-ink-muted">
+                                        <Key className="w-3 h-3 text-accent" />
+                                        <span>Encrypted</span>
+                                    </div>
+                                    {isProcessing ? (
+                                        <div className="flex items-center space-x-1 text-[10px] text-status-amber">
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                            <span>Processing</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center space-x-1 text-[10px] text-accent">
+                                            <CheckCircle className="w-3 h-3" />
+                                            <span>Extracted</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Extracted data preview */}
+                                {isProcessing ? (
+                                    <div className="space-y-2">
+                                        <div className="skeleton h-3 w-full"></div>
+                                        <div className="skeleton h-3 w-3/4"></div>
+                                        <div className="skeleton h-3 w-1/2"></div>
+                                    </div>
+                                ) : (
+                                    <div className="text-xs bg-surface-100 text-ink-secondary p-2.5 rounded-lg h-20 overflow-y-auto font-mono whitespace-pre-wrap border border-border-light">
+                                        {doc.extractedFields}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="bg-surface-100 px-4 py-2.5 flex items-center justify-between border-t border-border-light">
+                                <a
+                                    href={`/api/v1/vault/${doc.documentId}/preview`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-accent hover:text-accent-light text-xs font-medium flex items-center transition-colors space-x-1"
+                                >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>View</span>
+                                </a>
+                                <span className="text-[10px] text-ink-faint font-mono" title={doc.documentId}>
+                                    {doc.documentId.substring(0, 8)}...
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Empty State */}
+            {filteredDocs.length === 0 && !uploading && (
+                <div className="text-center py-16 px-4 border border-dashed border-border-dark rounded-xl bg-surface-50">
+                    <FolderOpen className="w-10 h-10 mx-auto text-ink-faint mb-3" />
+                    <h3 className="text-base font-semibold text-ink mb-1">
+                        {activeTab === 'All' ? 'Your vault is empty' : `No ${activeTab.toLowerCase()} documents`}
+                    </h3>
+                    <p className="text-ink-muted text-sm max-w-sm mx-auto mb-4">
+                        {activeTab === 'All'
+                            ? 'Upload your government IDs, certificates, and proofs to start automating forms.'
+                            : `Upload ${activeTab.toLowerCase()} documents to see them here.`
+                        }
+                    </p>
+                    <label className="relative cursor-pointer inline-block">
+                        <span className="inline-flex items-center space-x-1.5 px-5 py-2.5 rounded-lg font-semibold text-sm bg-ink text-surface-50 hover:bg-ink-secondary transition-all">
+                            <Plus className="w-4 h-4" />
+                            <span>Add Document</span>
+                        </span>
+                        <input type="file" name="file_upload" className="hidden" onChange={handleUpload} disabled={uploading} />
+                    </label>
                 </div>
             )}
+
+            {/* Privacy Panel */}
+            <div className="bg-surface-50 rounded-xl border border-border p-5">
+                <div className="flex items-center space-x-2 mb-3">
+                    <ShieldCheck className="w-4 h-4 text-accent" />
+                    <h4 className="text-sm font-semibold text-ink">Your documents stay under your control</h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="flex items-center space-x-2 text-xs text-ink-secondary">
+                        <Lock className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                        <span>AES-256 encrypted at rest</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs text-ink-secondary">
+                        <HardDrive className="w-3.5 h-3.5 text-ink-faint flex-shrink-0" />
+                        <span>Processed locally on your machine</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-xs text-ink-secondary">
+                        <CloudOff className="w-3.5 h-3.5 text-ink-faint flex-shrink-0" />
+                        <span>No cloud document storage</span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

@@ -10,8 +10,8 @@
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  3.709 s
-[INFO] Finished at: 2026-09-01T18:11:30+05:30
+[INFO] Total time:  4.247 s
+[INFO] Finished at: 2026-09-02T23:31:07+05:30
 [INFO] ------------------------------------------------------------------------
 [ERROR] Failed to execute goal org.apache.maven.plugins:maven-clean-plugin:3.5.0:clean (default-clean) on project form-copilot: Failed to clean project: Failed to delete C:\Users\Mohak Tandon\.gemini\antigravity\scratch\form-copilot\backend\target\form-copilot-0.0.1-SNAPSHOT.jar: C:\Users\Mohak Tandon\.gemini\antigravity\scratch\form-copilot\backend\target\form-copilot-0.0.1-SNAPSHOT.jar: The process cannot access the file because it is being used by another process -> [Help 1]
 [ERROR] 

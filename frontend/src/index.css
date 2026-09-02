@@ -7,34 +7,34 @@
     *,
     *::before,
     *::after {
-        border-color: theme('colors.navy.700');
+        border-color: theme('colors.border.DEFAULT');
     }
 
     body {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: theme('colors.navy.950');
-        color: theme('colors.ivory.DEFAULT');
+        background-color: theme('colors.surface.DEFAULT');
+        color: theme('colors.ink.DEFAULT');
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Scrollbar theming */
+    /* Scrollbar theming — subtle for light mode */
     ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
     }
 
     ::-webkit-scrollbar-track {
-        background: theme('colors.navy.900');
+        background: theme('colors.surface.100');
     }
 
     ::-webkit-scrollbar-thumb {
-        background: theme('colors.navy.600');
+        background: theme('colors.border.dark');
         border-radius: 3px;
     }
 
     ::-webkit-scrollbar-thumb:hover {
-        background: theme('colors.navy.500');
+        background: theme('colors.ink.faint');
     }
 }
 
@@ -48,19 +48,104 @@
     }
 
     .animate-in {
-        animation: animate-in 0.5s ease-out forwards;
+        animation: animate-in 0.4s ease-out forwards;
         opacity: 0;
     }
 
     .font-display {
         font-family: 'DM Serif Display', Georgia, serif;
     }
+
+    /* Skeleton loader — light mode */
+    .skeleton {
+        background: linear-gradient(90deg,
+                theme('colors.surface.200') 0%,
+                theme('colors.surface.300') 50%,
+                theme('colors.surface.200') 100%);
+        background-size: 200% 100%;
+        animation: skeleton-shimmer 1.5s ease-in-out infinite;
+        border-radius: 0.375rem;
+    }
+
+    /* Accordion transition */
+    .accordion-content {
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+        max-height: 0;
+        opacity: 0;
+    }
+
+    .accordion-content.open {
+        max-height: 600px;
+        opacity: 1;
+    }
+}
+
+/* Architectural grid background */
+.bg-grid {
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
+}
+
+.bg-grid-strong {
+    background-image:
+        radial-gradient(circle, rgba(0, 0, 0, 0.12) 1.5px, transparent 1.5px);
+    background-size: 32px 32px;
+}
+
+/* Circular geometric motif */
+.bg-circles::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 850px;
+    height: 850px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.02);
+    pointer-events: none;
+}
+
+.bg-circles::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 550px;
+    height: 550px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+}
+
+.bg-circles-inner {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.bg-circles-inner::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(0, 0, 0, 0.2);
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0.04) 0%, transparent 70%);
 }
 
 @keyframes animate-in {
     from {
         opacity: 0;
-        transform: translateY(0.75rem);
+        transform: translateY(0.5rem);
     }
 
     to {
@@ -69,40 +154,48 @@
     }
 }
 
-@keyframes blob {
+@keyframes skeleton-shimmer {
     0% {
-        transform: translate(0px, 0px) scale(1);
-    }
-
-    33% {
-        transform: translate(30px, -50px) scale(1.1);
-    }
-
-    66% {
-        transform: translate(-20px, 20px) scale(0.9);
-    }
-
-    100% {
-        transform: translate(0px, 0px) scale(1);
-    }
-}
-
-.animate-blob {
-    animation: blob 7s infinite;
-}
-
-@keyframes shimmer {
-    0% {
-        background-position: -200% 0;
-    }
-
-    100% {
         background-position: 200% 0;
     }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 
-.animate-shimmer {
-    background: linear-gradient(90deg, transparent 0%, rgba(201, 169, 110, 0.06) 50%, transparent 100%);
-    background-size: 200% 100%;
-    animation: shimmer 3s ease-in-out infinite;
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 2s linear infinite;
+}
+
+/* Focus ring utility — institutional green */
+.focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-accent/30 focus:ring-offset-2 focus:ring-offset-surface;
+}
+
+/* Stepper line */
+.stepper-line {
+    height: 2px;
+    background: theme('colors.border.DEFAULT');
+}
+
+.stepper-line.completed {
+    background: theme('colors.accent.DEFAULT');
+}
+
+/* Gauge / semicircle progress */
+.gauge-ring {
+    stroke-dasharray: 188;
+    stroke-dashoffset: 188;
+    transition: stroke-dashoffset 1s ease-out;
 }
